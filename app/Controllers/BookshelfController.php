@@ -81,7 +81,6 @@ class BookshelfController extends ResourceController
                 $libraryID = $decoded_payload->libID;
                 $books_shelf_indexes = $decoded_payload->books; // Not that this will be the dataattribute name in the html form
 
-                $book_arr_len = count($books_shelf_indexes);
                 // Check if user has due books
                 // THis check will ensure a user who has due books is not allowed to borrow
                 $builder = $db->table('borrower_register');
@@ -212,7 +211,91 @@ class BookshelfController extends ResourceController
         return $this->respondCreated($response);
     }
 
-    public function returnBooks() {
-        echo "Return books here. ";
+    public function returnBooks()
+    {
+        // echo "Return books here. ";
+        $db = \Config\Database::connect();
+
+
+        $meta_borrower_table = $db->table('meta_borrower_register');
+
+        // $payload = file_get_contents('php://input');
+        // $decode_payload = json_decode($payload);
+
+        // echo $decode_payload->booksToReturn[0]->bookReference;
+        // echo $decode_payload->booksToReturn[0]->{'shelf-index'};
+
+        // return;
+
+        if ($this->request->is('post')) {
+            $rules = [
+                'booksToReturn.*.bookReference' =>  'required', // 
+                'booksToReturn.*.shelf-index' =>  'required|integer',
+            ];
+
+            if (!$this->validate($rules)) {
+                //    echo "Error";
+                $response = [
+                    'status' => 400,
+                    'message' => $this->validator->getErrors(),
+                    'error' => true,
+                    'data' => []
+                ];
+                // return "Not valid";
+            } else {
+                $borrower_table = $db->table('borrower_register');
+
+                // echo "Yayyy";
+                $payload = file_get_contents('php://input');
+                $books = json_decode($payload);
+
+                foreach ($books->booksToReturn as $book) {
+                    $book_ref = $book->bookReference;
+                    $book_index = $book->{'shelf-index'};
+                    $borrower_table->where('book_reference', $book_ref);
+                    $result = $borrower_table->get()->getResult();
+
+                    // print_r($result);
+                    // return;
+
+                    if ($result) {
+
+                        // Update Borrower and meta Borrower Table
+                        $borrower_table->set('isReturned', true);
+                        $meta_borrower_table->set('isDue', false);
+
+                        $borrower_table->join('meta_borrower_register', 'borrower_register.borrower_register_id = meta_borrower_register.borrower_register_id');
+                        $borrower_table->where('borrower_register.book_reference', $book_ref);
+
+                        $borrower_table->update();
+                        // Update the meta_borrower_table
+                        $meta_borrower_table->where('borrower_register_id IN (SELECT borrower_register_id FROM borrower_register WHERE book_reference = "' . $book_ref . '")');
+                        $meta_borrower_table->update();
+
+
+                        // Update Book Shelf
+                        $book_shelf = $db->table('book_shelf');
+                        $book_shelf->where('book_shelf_id', $book_index);
+                        $book_shelf->set('isBorrowed', false);
+                        $book_shelf->update();
+
+                        $response = [
+                            'status' => 200,
+                            'message' => 'Submitted successfully!',
+                            'error' => false,
+                            'data' => []
+                        ];
+                    } else {
+                        $response = [
+                            'status' => 400,
+                            'message' => 'The reference does not exist or submitting failed. Please check and try again',
+                            'error' => true,
+                            'data' => []
+                        ];
+                    }
+                }
+            }
+        }
+        return $this->respondCreated($response);
     }
 }
