@@ -35,3 +35,14 @@ INSERT INTO `borrower_register` (`register_id`, `book_reference`, `book_shelf_id
 
 /*Insert meta detaisl*/
 INSERT INTO `meta_borrower_register` (`meta_reg_id`, `register_id`, `num_days_borrowed`, `late_fees`, `days_overdue`, `isDue`) VALUES (NULL, '1', '0', '0', '0', '0');
+
+/*Create tokens table*/
+CREATE TABLE tokens (
+  admin_id INT NOT NULL,
+  token_id INT NOT NULL AUTO_INCREMENT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  expires_at TIMESTAMP NOT NULL,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (token_id),
+  FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE CASCADE
+);

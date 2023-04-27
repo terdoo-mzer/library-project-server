@@ -6,6 +6,9 @@ use App\Controllers\BaseController;
 use App\Models\BorrowerRegisterModel;
 use App\Models\MetaBorrowerRegisterModel;
 
+// https://www.glennstovall.com/writing-cron-job-in-codeigniter/
+// https://crontab-generator.org/
+// https://www.easycron.com/
 
 class AutoUpdateDBController extends BaseController
 {

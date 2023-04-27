@@ -33,12 +33,18 @@ $routes->get('/', 'Home::index');
 
 $routes->group('api/v1', function($routes) {
     // $routes->get('register-user', 'UserController::index');
-    $routes->get('register-user/validate/(:num)', 'UserController::register_user/$1');
-    $routes->get('retrieve-borrowed-books/(:num)', 'UserController::retrieveUserBorrowedBooks/$1');
-    $routes->post('register-user', 'UserController::register_user');
-    $routes->get('get-book', 'BookshelfController::getBook');
-    $routes->post('borrow-book', 'BookshelfController::borrowBook');
-    $routes->post('return-book', 'BookshelfController::returnBooks');
+    $routes->get('register-user/validate/(:num)', 'UserController::register_user/$1', ['filter' => 'auth']);
+    $routes->get('retrieve-borrowed-books/(:num)', 'UserController::retrieveUserBorrowedBooks/$1', ['filter' => 'auth']);
+    $routes->post('register-user', 'UserController::register_user', ['filter' => 'auth']);
+    $routes->get('get-book', 'BookshelfController::getBook', ['filter' => 'auth']);
+    $routes->post('borrow-book', 'BookshelfController::borrowBook', ['filter' => 'auth']);
+    $routes->post('return-book', 'BookshelfController::returnBooks', ['filter' => 'auth']);
+});
+
+$routes->group('api/v1/auth',['namespace' => 'App\Controllers\Admin'], function($routes) {
+    $routes->post('create-admin', 'AdminController::createAdmin');
+    $routes->post('login', 'AdminController::login');
+    $routes->post('logout', 'AdminController::logout');
 });
 
 $routes->post('update-db', 'AutoUpdateDBController::auto_update_days_fee');
